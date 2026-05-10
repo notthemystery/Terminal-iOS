@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0">
+<dict>
+
+    <!-- Change to ad-hoc or development depending on your certs -->
+    <key>method</key>
+    <string>ad-hoc</string>
+
+    <key>signingStyle</key>
+    <string>automatic</string>
+
+    <key>compileBitcode</key>
+    <false/>
+
+    <key>destination</key>
+    <string>export</string>
+
+</dict>
+</plist>
