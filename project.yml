@@ -1,0 +1,20 @@
+name: MyApp
+
+options:
+  bundleIdPrefix: com.shell.app
+
+targets:
+  MyApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: MyApp
+      - path: Term.swift
+      - path: tools
+
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.shell.app
+      IPHONEOS_DEPLOYMENT_TARGET: 15.0
+
+    info:
+      path: MyApp/Info.plist
