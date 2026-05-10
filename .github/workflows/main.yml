@@ -1,4 +1,4 @@
-name: iOS Build with tools injection
+name: iOS Shell App CI
 
 on:
   push:
@@ -10,39 +10,37 @@ jobs:
 
     steps:
       # ─────────────────────────────
-      # 1. Checkout repo
+      # 1. Checkout code
       # ─────────────────────────────
       - name: Checkout
         uses: actions/checkout@v4
 
       # ─────────────────────────────
-      # 2. Prepare tools folder inside build root
-      # (THIS IS THE KEY TRICK)
+      # 2. Install XcodeGen
       # ─────────────────────────────
-      - name: Prepare tools for bundling
-        run: |
-          echo "Preparing tools..."
-          mkdir -p tools_build
-          cp -R tools/* tools_build/
-          chmod +x tools_build/* || true
+      - name: Install XcodeGen
+        run: brew install xcodegen
 
       # ─────────────────────────────
-      # 3. Move tools into Xcode expected Resources path
-      # BEFORE build (no Xcode edits needed)
+      # 3. Generate Xcode project
       # ─────────────────────────────
-      - name: Inject tools into build resources
-        run: |
-          mkdir -p MyApp/tools
-          cp -R tools_build/* MyApp/tools/
+      - name: Generate Xcode project
+        run: xcodegen generate
 
       # ─────────────────────────────
-      # 4. Select Xcode
+      # 4. Show generated project (debug)
+      # ─────────────────────────────
+      - name: Verify project
+        run: ls -R .
+
+      # ─────────────────────────────
+      # 5. Select Xcode
       # ─────────────────────────────
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
 
       # ─────────────────────────────
-      # 5. Build app
+      # 6. Build app
       # ─────────────────────────────
       - name: Build iOS App
         run: |
@@ -54,7 +52,7 @@ jobs:
             clean build
 
       # ─────────────────────────────
-      # 6. Archive
+      # 7. Archive
       # ─────────────────────────────
       - name: Archive
         run: |
@@ -66,7 +64,7 @@ jobs:
             archive
 
       # ─────────────────────────────
-      # 7. Export IPA
+      # 8. Export IPA
       # ─────────────────────────────
       - name: Export IPA
         run: |
@@ -77,17 +75,17 @@ jobs:
             -exportOptionsPlist ExportOptions.plist
 
       # ─────────────────────────────
-      # 8. Verify tools exist in bundle
+      # 9. Verify tools are included
       # ─────────────────────────────
-      - name: Verify tools
+      - name: Check tools in bundle
         run: |
           find build -name tools || echo "tools not found"
 
       # ─────────────────────────────
-      # 9. Upload artifact
+      # 10. Upload artifact
       # ─────────────────────────────
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: ios-shell
+          name: ios-shell-app
           path: build/
