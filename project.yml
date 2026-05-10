@@ -8,7 +8,6 @@ targets:
     type: application
     platform: iOS
     sources:
-      - path: MyApp
       - path: Term.swift
       - path: tools
 
