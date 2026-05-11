@@ -9,6 +9,9 @@ targets:
     platform: iOS
     sources:
       - path: Term.swift
+      - path: Terminal-Bridging-Header.h
+      - path: spawn.h
+      - path: spawn.c
       - path: tools
 
     settings:
