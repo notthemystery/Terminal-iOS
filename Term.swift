@@ -52,7 +52,7 @@ struct TermView: View {
                     .padding()
                 }
                 .background(Color.black)
-                .onChange(of: lines.count) {
+                .onChange(of: lines.count) { _ in
 
                     if lines.count > 0 {
                         proxy.scrollTo(lines.count - 1, anchor: .bottom)
@@ -228,7 +228,7 @@ struct Shell {
 
         var fileActions = posix_spawn_file_actions_t()
 
-        posix_spawn_file_actions_init(&fileActions)
+        var fileActions = posix_spawn_file_actions_t(bitPattern: 0)
 
         // stdin
 
