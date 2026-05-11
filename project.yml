@@ -1,7 +1,7 @@
-name: MyApp
+name: Terminal
 
 options:
-  bundleIdPrefix: com.shell.app
+  bundleIdPrefix: com.Terminal.app
 
 targets:
   MyApp:
@@ -12,7 +12,7 @@ targets:
       - path: tools
 
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.shell.app
+      PRODUCT_BUNDLE_IDENTIFIER: com.Terminal.app
       IPHONEOS_DEPLOYMENT_TARGET: 15.0
 
     info:
