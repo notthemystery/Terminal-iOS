@@ -1,14 +1,15 @@
-#include "spawn_helper.h"
+#include "spawn.h"
+
 #include <spawn.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
-#include <fcntl.h>
 #include <sys/wait.h>
 
 extern char **environ;
 
-int run_command(const char *tool_path, const char *cmd, char **output) {
+int run_command(const char *toolPath, const char *cmd, char **output) {
 
     int pipefd[2];
     pipe(pipefd);
@@ -18,22 +19,20 @@ int run_command(const char *tool_path, const char *cmd, char **output) {
     posix_spawn_file_actions_t actions;
     posix_spawn_file_actions_init(&actions);
 
-    // redirect stdout + stderr
+    // redirect stdout/stderr → pipe
     posix_spawn_file_actions_adddup2(&actions, pipefd[1], STDOUT_FILENO);
     posix_spawn_file_actions_adddup2(&actions, pipefd[1], STDERR_FILENO);
     posix_spawn_file_actions_addclose(&actions, pipefd[0]);
 
-    // IMPORTANT: use your tool (bash or utils binary)
     char *argv[] = {
-        (char *)tool_path,
-        "-c",
+        (char *)toolPath,
         (char *)cmd,
         NULL
     };
 
     int status = posix_spawn(
         &pid,
-        tool_path,
+        toolPath,
         &actions,
         NULL,
         argv,
@@ -41,6 +40,7 @@ int run_command(const char *tool_path, const char *cmd, char **output) {
     );
 
     posix_spawn_file_actions_destroy(&actions);
+
     close(pipefd[1]);
 
     if (status != 0) {
