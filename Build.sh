@@ -24,9 +24,12 @@ echo "[*] Building..."
 
 if [[ $* == *--debug* ]]; then
 
+SCHEME=$(xcodebuild -list -project "$WORKING_LOCATION/$APPLICATION_NAME.xcodeproj" | awk '/Schemes:/ {getline; print $1}')
+echo "[*] Using scheme: $SCHEME"
+
 xcodebuild \
     -project "$WORKING_LOCATION/$APPLICATION_NAME.xcodeproj" \
-    -scheme "$APPLICATION_NAME" \
+    -scheme "$SCHEME" \
     -configuration Debug \
     -derivedDataPath "$WORKING_LOCATION/build/DerivedDataApp" \
     -destination 'generic/platform=iOS' \
@@ -40,9 +43,12 @@ DD_APP_PATH="$WORKING_LOCATION/build/DerivedDataApp/Build/Products/Debug-iphoneo
 
 else
 
+SCHEME=$(xcodebuild -list -project "$WORKING_LOCATION/$APPLICATION_NAME.xcodeproj" | awk '/Schemes:/ {getline; print $1}')
+echo "[*] Using scheme: $SCHEME"
+
 xcodebuild \
     -project "$WORKING_LOCATION/$APPLICATION_NAME.xcodeproj" \
-    -scheme "$APPLICATION_NAME" \
+    -scheme "$SCHEME" \
     -configuration Release \
     -derivedDataPath "$WORKING_LOCATION/build/DerivedDataApp" \
     -destination 'generic/platform=iOS' \
