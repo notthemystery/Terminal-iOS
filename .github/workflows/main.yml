@@ -44,19 +44,9 @@ jobs:
       # ─────────────────────────────
       - name: Build iOS App
         run: |
-          Build.sh
-
-      # ─────────────────────────────
-      # 8. Export IPA
-      # ─────────────────────────────
-      - name: Export IPA
-        run: |
-          xcodebuild \
-            -exportArchive \
-            -archivePath build/MyApp.xcarchive \
-            -exportPath build \
-            -exportOptionsPlist ExportOptions.plist
-
+          chmod +x Build.sh
+          ./Build.sh
+      
       # ─────────────────────────────
       # 9. Verify tools are included
       # ─────────────────────────────
@@ -70,5 +60,5 @@ jobs:
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: ios-shell-app
+          name: Terminal-ipa
           path: build/
