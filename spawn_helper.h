@@ -1,13 +1,11 @@
-#ifndef spawn_helper_h
-#define spawn_helper_h
-
-#include <stdio.h>
+#ifndef spawn_h
+#define spawn_h
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int run_command(const char *cmd, char **output);
+int run_command(const char *toolPath, const char *cmd, char **output);
 
 #ifdef __cplusplus
 }
