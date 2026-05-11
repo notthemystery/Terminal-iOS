@@ -30,6 +30,7 @@ struct TermView: View {
         VStack(spacing: 0) {
 
             // OUTPUT
+
             ScrollViewReader { proxy in
 
                 ScrollView {
@@ -41,7 +42,10 @@ struct TermView: View {
                             Text(lines[i])
                                 .font(.system(.body, design: .monospaced))
                                 .foregroundColor(.green)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(
+                                    maxWidth: .infinity,
+                                    alignment: .leading
+                                )
                                 .id(i)
                         }
                     }
@@ -49,16 +53,19 @@ struct TermView: View {
                 }
                 .background(Color.black)
                 .onChange(of: lines.count) { _ in
+
                     if lines.count > 0 {
                         proxy.scrollTo(lines.count - 1, anchor: .bottom)
                     }
                 }
             }
 
-            Divider().overlay(Color.green)
+            Divider()
+                .overlay(Color.green)
 
             // INPUT
-            HStack {
+
+            HStack(alignment: .center, spacing: 8) {
 
                 Text("$")
                     .foregroundColor(.green)
@@ -70,7 +77,9 @@ struct TermView: View {
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
                     .submitLabel(.go)
-                    .onSubmit { run() }
+                    .onSubmit {
+                        run()
+                    }
             }
             .padding()
             .background(Color.black)
@@ -78,19 +87,32 @@ struct TermView: View {
         .background(Color.black)
     }
 
-    // MARK: RUN
+    // MARK: - RUN COMMAND
 
     func run() {
 
-        let cmd = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cmd.isEmpty else { return }
+        let cmd = input.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+
+        guard !cmd.isEmpty else {
+            return
+        }
 
         lines.append("$ \(cmd)")
 
         do {
+
             let out = try Shell.runPipeline(cmd)
-            lines.append(out.isEmpty ? "(no output)" : out)
+
+            if out.isEmpty {
+                lines.append("(no output)")
+            } else {
+                lines.append(out)
+            }
+
         } catch {
+
             lines.append("error: \(error)")
         }
 
@@ -110,15 +132,20 @@ enum ShellError: Error {
 
 struct Shell {
 
-    static let toolDir = Bundle.main.bundlePath + "/tools/"
+    static let toolDir =
+        Bundle.main.bundlePath + "/tools/"
 
     // MARK: Pipeline
 
     static func runPipeline(_ input: String) throws -> String {
 
-        let commands = input.split(separator: "|").map {
-            $0.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
+        let commands = input
+            .split(separator: "|")
+            .map {
+                $0.trimmingCharacters(
+                    in: .whitespacesAndNewlines
+                )
+            }
 
         var data: Data? = nil
 
@@ -126,14 +153,23 @@ struct Shell {
             data = try execute(cmd, input: data)
         }
 
-        return String(data: data ?? Data(), encoding: .utf8) ?? ""
+        return String(
+            data: data ?? Data(),
+            encoding: .utf8
+        ) ?? ""
     }
 
     // MARK: Execute
 
-    static func execute(_ command: String, input: Data?) throws -> Data {
+    static func execute(
+        _ command: String,
+        input: Data?
+    ) throws -> Data {
 
-        let parts = command.split(separator: " ").map(String.init)
+        let parts = command
+            .split(separator: " ")
+            .map(String.init)
+
         guard let name = parts.first else {
             throw ShellError.invalidCommand
         }
@@ -142,25 +178,45 @@ struct Shell {
 
         let toolPath = toolDir + name
 
+        // bundled tool
+
         if FileManager.default.fileExists(atPath: toolPath) {
-            return try spawn(path: toolPath, args: args, input: input)
+
+            return try spawn(
+                path: toolPath,
+                args: args,
+                input: input
+            )
         }
+
+        // fallback to bash
 
         let bashPath = toolDir + "bash"
 
         if FileManager.default.fileExists(atPath: bashPath) {
-            return try spawn(path: bashPath, args: ["-c", command], input: input)
+
+            return try spawn(
+                path: bashPath,
+                args: ["-c", command],
+                input: input
+            )
         }
 
         throw ShellError.binaryNotFound
     }
 
-    // MARK: SPAWN (FIXED)
+    // MARK: Spawn
 
-    static func spawn(path: String, args: [String], input: Data?) throws -> Data {
+    static func spawn(
+        path: String,
+        args: [String],
+        input: Data?
+    ) throws -> Data {
 
         let stdinPipe = Pipe()
         let stdoutPipe = Pipe()
+
+        // write stdin
 
         if let input = input {
             stdinPipe.fileHandleForWriting.write(input)
@@ -168,60 +224,95 @@ struct Shell {
 
         stdinPipe.fileHandleForWriting.closeFile()
 
-        // FIXED: proper allocation
-        let fileActionsPtr = UnsafeMutablePointer<posix_spawn_file_actions_t>.allocate(capacity: 1)
-        fileActionsPtr.initialize(to: posix_spawn_file_actions_t())
+        // file actions
 
-        posix_spawn_file_actions_init(fileActionsPtr)
+        var fileActions = posix_spawn_file_actions_t()
+
+        var fileActions = posix_spawn_file_actions_t(bitPattern: 0)
+
+        // stdin
 
         let stdinFD: Int32
 
         if input == nil {
+
             stdinFD = open("/dev/null", O_RDONLY)
+
         } else {
-            stdinFD = stdinPipe.fileHandleForReading.fileDescriptor
+
+            stdinFD =
+                stdinPipe
+                    .fileHandleForReading
+                    .fileDescriptor
         }
 
-        posix_spawn_file_actions_adddup2(fileActionsPtr, stdinFD, STDIN_FILENO)
+        posix_spawn_file_actions_adddup2(
+            &fileActions,
+            stdinFD,
+            STDIN_FILENO
+        )
+
+        // stdout
 
         posix_spawn_file_actions_adddup2(
-            fileActionsPtr,
-            stdoutPipe.fileHandleForWriting.fileDescriptor,
+            &fileActions,
+            stdoutPipe
+                .fileHandleForWriting
+                .fileDescriptor,
             STDOUT_FILENO
         )
 
+        // stderr
+
         posix_spawn_file_actions_adddup2(
-            fileActionsPtr,
-            stdoutPipe.fileHandleForWriting.fileDescriptor,
+            &fileActions,
+            stdoutPipe
+                .fileHandleForWriting
+                .fileDescriptor,
             STDERR_FILENO
         )
 
         var pid: pid_t = 0
 
-        var argv = ([path] + args).map { strdup($0) }
+        // argv
+
+        var argv:
+            [UnsafeMutablePointer<CChar>?] =
+                ([path] + args)
+                    .map { strdup($0) }
+
         argv.append(nil)
 
-        var env = [
-            strdup("PATH=\(toolDir)"),
-            nil
-        ]
+        // env
+
+        var env:
+            [UnsafeMutablePointer<CChar>?] = [
+                strdup("PATH=\(toolDir)"),
+                nil
+            ]
 
         let status = posix_spawn(
             &pid,
             path,
-            fileActionsPtr,
+            &fileActions,
             nil,
             &argv,
             &env
         )
 
-        // cleanup argv/env
-        for ptr in argv where ptr != nil { free(ptr) }
-        for ptr in env where ptr != nil { free(ptr) }
+        // cleanup
 
-        posix_spawn_file_actions_destroy(fileActionsPtr)
-        fileActionsPtr.deinitialize(count: 1)
-        fileActionsPtr.deallocate()
+        for ptr in argv where ptr != nil {
+            free(ptr)
+        }
+
+        for ptr in env where ptr != nil {
+            free(ptr)
+        }
+
+        posix_spawn_file_actions_destroy(
+            &fileActions
+        )
 
         guard status == 0 else {
             throw ShellError.spawnFailed
@@ -229,8 +320,15 @@ struct Shell {
 
         waitpid(pid, nil, 0)
 
-        stdoutPipe.fileHandleForWriting.closeFile()
+        stdoutPipe
+            .fileHandleForWriting
+            .closeFile()
 
-        return stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+        let data =
+            stdoutPipe
+                .fileHandleForReading
+                .readDataToEndOfFile()
+
+        return data
     }
 }
