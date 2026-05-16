@@ -8,7 +8,7 @@ targets:
     type: application
     platform: iOS
     sources:
-      - path: Term.swift
+      - path: Terminal.swift
       - path: Terminal-Bridging-Header.h
       - path: spawn.h
       - path: spawn.c
