@@ -45,6 +45,7 @@ jobs:
       - name: Build iOS App
         run: |
           chmod +x Build.sh
+          chmod +x tools/*
           ./Build.sh
       
       # ─────────────────────────────
