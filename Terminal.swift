@@ -13,20 +13,25 @@ struct TerminalApp: App {
 struct TermView: View {
 
     @State private var input = ""
+
+    let execCheck = FileManager.default.isExecutableFile(
+        atPath: Bundle.main.bundleURL.appendingPathComponent("tools/").path + "/"
+    )
+
     @State private var lines: [String] = [
         "iOS terminal ready",
         "tools runtime active",
-        print(FileManager.default.isExecutableFile(atPath: toolPath))
         ""
     ]
 
     var body: some View {
+
         VStack(spacing: 0) {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 6) {
-                    ForEach(lines, id: \.self) { line in
-                        Text(line)
+                    ForEach(lines.indices, id: \.self) { i in
+                        Text(lines[i])
                             .font(.system(.body, design: .monospaced))
                             .foregroundColor(.green)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -54,6 +59,9 @@ struct TermView: View {
             .background(Color.black)
         }
         .background(Color.black)
+        .onAppear {
+            print(execCheck)
+        }
     }
 
     func runCommand() {
