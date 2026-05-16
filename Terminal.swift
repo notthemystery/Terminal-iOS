@@ -15,7 +15,7 @@ struct TermView: View {
     @State private var input = ""
     @State private var lines: [String] = [
         "iOS terminal ready",
-        "tools shell active",
+        "tools runtime active",
         ""
     ]
 
@@ -62,7 +62,6 @@ struct TermView: View {
         lines.append("$ \(cmd)")
 
         let result = Shell.run(cmd)
-
         lines.append(result.isEmpty ? "(no output)" : result)
 
         input = ""
@@ -76,7 +75,7 @@ struct Shell {
     static var toolDir: String {
         Bundle.main.bundleURL
             .appendingPathComponent("tools/")
-            .path
+            .path + "/"
     }
 
     static func run(_ command: String) -> String {
@@ -91,7 +90,6 @@ struct Shell {
 
         let toolPath = toolDir + tool
 
-        // build argv properly
         var argv: [UnsafeMutablePointer<CChar>?] = parts.map { strdup($0) }
         argv.append(nil)
 
@@ -107,13 +105,13 @@ struct Shell {
 
         let status = run_command(toolPath, &argv, &outputPtr)
 
-        guard status == 0, let outputPtr else {
-            return "error: \(status)"
+        guard let outputPtr else {
+            return "error: no output"
         }
 
         let output = String(cString: outputPtr)
         free(outputPtr)
 
-        return output
+        return status == 0 ? output : "ERROR \(status)\n\(output)"
     }
 }
