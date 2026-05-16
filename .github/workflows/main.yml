@@ -50,9 +50,9 @@ jobs:
       # ─────────────────────────────
       # 9. Verify tools are included
       # ─────────────────────────────
-      - name: Check tools in bundle
+      - name: Debug
         run: |
-          find build -name tools || echo "tools not found"
+          ls -R
 
       # ─────────────────────────────
       # 10. Upload artifact
@@ -61,4 +61,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Terminal-ipa
-          path: build/
+          path: ./*.ipa
