@@ -1,8 +1,6 @@
 import SwiftUI
 import Foundation
 
-// MARK: - APP
-
 @main
 struct TerminalApp: App {
     var body: some Scene {
@@ -12,25 +10,22 @@ struct TerminalApp: App {
     }
 }
 
-// MARK: - UI
-
 struct TermView: View {
 
     @State private var input = ""
     @State private var lines: [String] = [
         "iOS terminal ready",
-        "tools-based shell loaded",
+        "tools shell active",
         ""
     ]
 
     var body: some View {
         VStack(spacing: 0) {
 
-            // OUTPUT
             ScrollView {
                 VStack(alignment: .leading, spacing: 6) {
-                    ForEach(lines.indices, id: \.self) { i in
-                        Text(lines[i])
+                    ForEach(lines, id: \.self) { line in
+                        Text(line)
                             .font(.system(.body, design: .monospaced))
                             .foregroundColor(.green)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -42,7 +37,6 @@ struct TermView: View {
 
             Divider().background(Color.green)
 
-            // INPUT
             HStack {
                 Text("$")
                     .foregroundColor(.green)
@@ -53,7 +47,7 @@ struct TermView: View {
                     .foregroundColor(.green)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
-                    .onSubmit(run)
+                    .onSubmit(runCommand)
             }
             .padding()
             .background(Color.black)
@@ -61,10 +55,7 @@ struct TermView: View {
         .background(Color.black)
     }
 
-    // MARK: RUN
-
-    func run() {
-
+    func runCommand() {
         let cmd = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cmd.isEmpty else { return }
 
@@ -83,19 +74,38 @@ struct TermView: View {
 struct Shell {
 
     static var toolDir: String {
-        Bundle.main.bundlePath + "/tools/"
+        Bundle.main.bundleURL
+            .appendingPathComponent("tools/")
+            .path
     }
 
     static func run(_ command: String) -> String {
 
-        let parts = command.split(separator: " ").map(String.init)
-        guard let tool = parts.first else { return "" }
+        let parts = command
+            .split(separator: " ")
+            .map(String.init)
+
+        guard let tool = parts.first else {
+            return "invalid command"
+        }
 
         let toolPath = toolDir + tool
 
+        // build argv properly
+        var argv: [UnsafeMutablePointer<CChar>?] = parts.map { strdup($0) }
+        argv.append(nil)
+
+        defer {
+            for arg in argv {
+                if let arg = arg {
+                    free(arg)
+                }
+            }
+        }
+
         var outputPtr: UnsafeMutablePointer<CChar>? = nil
 
-        let status = run_command(toolPath, command, &outputPtr)
+        let status = run_command(toolPath, &argv, &outputPtr)
 
         guard status == 0, let outputPtr else {
             return "error: \(status)"
