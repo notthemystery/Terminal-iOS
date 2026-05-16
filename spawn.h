@@ -7,7 +7,9 @@ extern "C" {
 
 #include <stdio.h>
 
-int run_command(const char *toolPath, char *const argv[], char **output);
+int run_command(const char *toolPath,
+                char *const argv[],
+                char **output);
 
 #ifdef __cplusplus
 }
