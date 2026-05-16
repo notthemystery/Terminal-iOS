@@ -17,6 +17,8 @@ targets:
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.Terminal.app
       IPHONEOS_DEPLOYMENT_TARGET: 15.0
+      SWIFT_OBJC_BRIDGING_HEADER: Terminal-Bridging-Header.h
 
     info:
       path: MyApp/Info.plist
+    
