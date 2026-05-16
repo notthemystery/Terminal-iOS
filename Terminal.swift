@@ -16,6 +16,7 @@ struct TermView: View {
     @State private var lines: [String] = [
         "iOS terminal ready",
         "tools runtime active",
+        print(FileManager.default.isExecutableFile(atPath: toolPath))
         ""
     ]
 
